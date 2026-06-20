@@ -27,5 +27,7 @@ jobs:
         uses: anomalyco/opencode/github@latest
         env:
           ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           model: z-ai/glm-4.5
+          github_token: ${{ secrets.GITHUB_TOKEN }}
