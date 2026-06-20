@@ -26,7 +26,3 @@ jobs:
 
       - name: Run OpenCode
         uses: anomalyco/opencode/github@latest
-        env:
-          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
-        with:
-          model: z-ai/glm-5.1
