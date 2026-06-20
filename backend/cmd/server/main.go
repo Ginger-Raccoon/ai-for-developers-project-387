@@ -1,8 +1,10 @@
 package main
 
 import (
+	"io/fs"
 	"log"
 	"net/http"
+	"os"
 
 	"booking-service/internal/handler"
 	"booking-service/internal/service"
@@ -39,11 +41,29 @@ func main() {
 	mux.HandleFunc("GET /api/v1/bookings", bookingHandler.List)
 	mux.HandleFunc("POST /api/v1/bookings", bookingHandler.Create)
 
+	// Serve frontend static files if the ./static directory exists.
+	if info, err := os.Stat("./static"); err == nil && info.IsDir() {
+		staticFS := os.DirFS("./static")
+		fileServer := http.FileServer(http.FS(staticFS))
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			// Try to serve the file; fall back to index.html for SPA routing.
+			if _, err := fs.Stat(staticFS, r.URL.Path[1:]); err == nil && r.URL.Path != "/" {
+				fileServer.ServeHTTP(w, r)
+				return
+			}
+			http.ServeFileFS(w, r, staticFS, "index.html")
+		})
+	}
+
 	// CORSMiddleware wraps the mux; it intercepts OPTIONS preflights before
 	// they reach any registered route handler.
 	corsHandler := handler.CORSMiddleware(mux)
 
-	addr := ":8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	addr := ":" + port
 	log.Printf("Booking service listening on %s", addr)
 	if err := http.ListenAndServe(addr, corsHandler); err != nil {
 		log.Fatalf("server error: %v", err)
